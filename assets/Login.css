@@ -1,0 +1,167 @@
+/* Login Page - Figma Design Match */
+
+ion-content.login-content::part(background) {
+  background: linear-gradient(180deg,
+    #fce4e4 0%,
+    #fef6f6 15%,
+    #ffffff 35%,
+    #ffffff 100%);
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+/* Logo Section */
+.logo-section {
+  display: flex;
+  justify-content: center;
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+
+.logo-section img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+}
+
+/* Header Section */
+.header-section {
+  margin-bottom: 24px;
+}
+
+.header-section h1 {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.header-section p {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b6b6b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Form Section */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-field {
+  --background: #ffffff;
+  --border-color: #d4d4d4;
+  --border-radius: 8px;
+  --border-width: 1px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --placeholder-color: #9a9a9a;
+  --placeholder-opacity: 1;
+  --color: #1a1a1a;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  min-height: 52px;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+}
+
+.input-field.has-focus {
+  --border-color: #3d7a8c;
+  border-color: #3d7a8c;
+}
+
+/* Password input with icon */
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper .input-field {
+  --padding-end: 48px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --color: #6b6b6b;
+  margin: 0;
+  z-index: 10;
+}
+
+/* Submit Button */
+.submit-button {
+  --background: #2A6E90;
+  --background-hover: #1b6c94;
+  --background-activated: #1c5977;
+  --border-radius: 8px;
+  --box-shadow: none;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 8px;
+  height: 52px;
+}
+
+/* Forgot Password Link */
+.forgot-password-section {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 120px;
+  padding-top: 32px;
+}
+
+.forgot-password-link {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #2A6E90;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
+/* Remove Ionic default card styles */
+ion-card.login-card {
+  margin: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+ion-card-content.login-card-content {
+  padding: 0;
+}
+
+/* Override Ionic input styling for outline fill */
+ion-input.input-field {
+  --highlight-color-focused: #3d7a8c;
+  --highlight-color-valid: #3d7a8c;
+}

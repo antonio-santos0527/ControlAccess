@@ -1,5 +1,4 @@
-import { IonButton, IonCard, IonCardContent, IonContent, IonIcon, IonInput, IonLoading, IonPage, useIonRouter, useIonToast } from '@ionic/react';
-import { eye } from 'ionicons/icons';
+import { IonButton, IonContent, IonInput, IonLoading, IonPage, useIonRouter, useIonToast } from '@ionic/react';
 import '../../assets/Login.css';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
@@ -7,9 +6,9 @@ import httpClient from '../../hooks/CapacitorClient';
 import { useAppDispatch } from '../../hooks/loginHooks';
 import { handleLoginSuccess } from '../../reducers/loginThunks';
 import { formatearRut } from '../../utils/RutFormatter';
+import logo from '../../assets/images/logo.png';
 
 const Login: React.FC = () => {
-  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const loginForm = useForm();
   const [toast] = useIonToast();
@@ -25,10 +24,6 @@ const Login: React.FC = () => {
       color,
       buttons: [{ text: "✖", role: "cancel" }]
     });
-  };
-
-  const handleShowPassword = () => {
-    setShowPassword(!showPassword)
   };
 
   const handleButtonClick = async () => {
@@ -58,24 +53,66 @@ const Login: React.FC = () => {
     }
   }
 
+  const handleForgotPassword = () => {
+    router.push('/modpass', 'forward', 'push');
+  };
+
   return (
     <IonPage>
-      <IonContent fullscreen>
+      <IonContent fullscreen className="login-content">
         <IonLoading spinner="circles" isOpen={loading} onDidDismiss={() => setLoading(false)} />
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <IonCard style={{ width: '90%', maxWidth: '500px' }}>
-            <IonCardContent>
-              <IonInput label="Rut" labelPlacement="stacked" fill="outline" placeholder='Sin puntos ni guión'
-                {...loginForm.register("username", { onChange: (e) => { loginForm.setValue('username', formatearRut(e.target.value)) } })} autocomplete='off'></IonInput>
-              <IonInput id="txtPassword" label="Contraseña" labelPlacement="stacked" fill="outline" type={showPassword ? "text" : "password"}
-                style={{ marginTop: "10px", marginBottom: "10px" }} {...loginForm.register("password")} autocomplete='off' placeholder='Contraseña'>
-                <IonButton fill="clear" slot="end" onClick={handleShowPassword} aria-label="Show/hide">
-                  <IonIcon slot="icon-only" icon={eye} aria-hidden="true"></IonIcon>
-                </IonButton>
-              </IonInput>
-              <IonButton expand='block' size='small' onClick={handleButtonClick}>Ingresar</IonButton>
-            </IonCardContent>
-          </IonCard>
+        
+        <div className="login-container">
+          {/* Logo */}
+          <div className="logo-section">
+            <img src={logo} alt="Logo" />
+          </div>
+
+          {/* Header */}
+          <div className="header-section">
+            <h1>Hola!</h1>
+            <p>Completa con tus datos para ingresar</p>
+          </div>
+
+          {/* Form */}
+          <div className="form-section">
+            <IonInput
+              className="input-field"
+              placeholder="Rut"
+              {...loginForm.register("username", { 
+                onChange: (e) => { 
+                  loginForm.setValue('username', formatearRut(e.target.value)) 
+                } 
+              })}
+              autocomplete="off"
+            />
+            
+            <IonInput
+              className="input-field"
+              placeholder="Nombre Completo"
+              type="password"
+              {...loginForm.register("password")}
+              autocomplete="off"
+            />
+
+            <IonButton 
+              expand="block" 
+              className="submit-button"
+              onClick={handleButtonClick}
+            >
+              Ingresar
+            </IonButton>
+          </div>
+
+          {/* Forgot Password */}
+          <div className="forgot-password-section">
+            <button 
+              className="forgot-password-link"
+              onClick={handleForgotPassword}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </div>
       </IonContent>
     </IonPage>
