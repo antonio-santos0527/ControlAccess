@@ -1,5 +1,5 @@
 import { IonContent, IonIcon, IonLoading, IonPage, useIonRouter, useIonToast } from '@ionic/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppSelector } from '../../hooks/loginHooks';
 import moment from 'moment';
 import httpClient from '../../hooks/CapacitorClient';
@@ -9,7 +9,6 @@ import '../../assets/QRView.css';
 
 const QRView: React.FC = () => {
   const router = useIonRouter();
-  const effectRan = useRef(false);
   const { user, username } = useAppSelector((state) => state.login);
   const [time, setTime] = useState(moment().format("DD/MM/YYYY, HH:mm"));
   const [timeEnd, setTimeEnd] = useState(moment().add(5, 'minutes').format("DD/MM/YYYY, HH:mm"));
@@ -45,17 +44,29 @@ const QRView: React.FC = () => {
       setTime(currentTime);
       setTimeEnd(endTime);
       
+      console.log('[QRView] Fetching QR for user:', user);
+      
       const response = await httpClient.post('/mobile/obtainQR', { 
         user, 
         fechaInicio: moment().format("YYYY-MM-DD HH:mm:ss"), 
         fechaFin: moment().add(5, 'minutes').format("YYYY-MM-DD HH:mm:ss") 
       });
       
-      if (response.status === 403) return false;
-      if (response.data.qrCode) {
-        setImage(response.data.qrCode);
+      console.log('[QRView] Response status:', response.status);
+      
+      if (response.status === 403) {
+        console.log('[QRView] 403 Forbidden');
+        return false;
       }
-    } catch {
+      
+      if (response.data?.qrCode) {
+        console.log('[QRView] QR code received successfully');
+        setImage(response.data.qrCode);
+      } else {
+        console.log('[QRView] No qrCode in response:', response.data);
+      }
+    } catch (error) {
+      console.error('[QRView] Error fetching QR:', error);
       // Keep using default QR image if API fails
     } finally {
       setLoading(false);
@@ -63,20 +74,22 @@ const QRView: React.FC = () => {
   };
 
   useEffect(() => {
-    if (effectRan.current === true || !import.meta.env.DEV) {
+    // Fetch QR immediately on mount
+    console.log('[QRView] Component mounted, fetching QR...');
+    getQRImage();
+    
+    // Set up auto-refresh every 5 minutes
+    const intervalId = setInterval(() => {
+      console.log('[QRView] Auto-refreshing QR...');
       getQRImage();
-      const intervalId = setInterval(() => {
-        getQRImage();
-      }, 5 * 60 * 1000);
-
-      return () => clearInterval(intervalId);
-    }
+    }, 5 * 60 * 1000);
 
     return () => {
-      effectRan.current = true;
+      console.log('[QRView] Cleaning up interval');
+      clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   return (
     <IonPage>

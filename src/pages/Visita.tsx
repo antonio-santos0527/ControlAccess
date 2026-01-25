@@ -33,11 +33,6 @@ interface Campos {
 const Visita: React.FC = () => {
   const router = useIonRouter();
   const { user, unidades } = useAppSelector((state) => state.login);
-  
-  // Debug: Log unidades when component loads
-  console.log('[Visita] User:', user);
-  console.log('[Visita] Unidades from Redux:', unidades);
-  console.log('[Visita] Unidades count:', unidades?.length ?? 'undefined');
   const [loading, setLoading] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [generatedQR, setGeneratedQR] = useState<string>('');
