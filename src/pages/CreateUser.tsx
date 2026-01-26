@@ -12,7 +12,7 @@ import {
   useIonRouter,
   useIonToast 
 } from "@ionic/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { formatearRut, handleRutDown, validarDigV } from "../../utils/RutFormatter";
 import { validateEmail, validateNombre, validateTelefono, validateRutFormat } from "../../utils/Validators";
 import { useForm } from "react-hook-form";
@@ -31,7 +31,8 @@ interface Campos {
 
 const CreateUser: React.FC = () => {
   const router = useIonRouter();
-  const { unidades } = useAppSelector((state) => state.login);
+  const { unidades: unidadesFromRedux } = useAppSelector((state) => state.login);
+  const [unidades, setUnidades] = useState<Array<{value: number | string, label: string}>>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const form = useForm();
   const modalInicio = useRef<HTMLIonModalElement>(null);
@@ -42,6 +43,46 @@ const CreateUser: React.FC = () => {
   const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(initDate.add(30, "days").format("yyyy-MM-DDTHH:mm:ss"));
   const [fechaMin] = useState(moment().format("yyyy-MM-DDTHH:mm:ss"));
   const [fechaMax] = useState(moment().add(1, 'year').format("yyyy-MM-DDTHH:mm:ss"));
+
+  // Fetch unidades on component mount
+  useEffect(() => {
+    const fetchUnidades = async () => {
+      // First, try to use unidades from Redux if available
+      if (unidadesFromRedux && unidadesFromRedux.length > 0) {
+        const mappedUnidades = unidadesFromRedux.map((u: any) => ({ 
+          value: typeof u.value === 'string' ? parseInt(u.value) || u.value : u.value, 
+          label: u.label 
+        }));
+        console.log('[CreateUser] Using unidades from Redux:', mappedUnidades);
+        setUnidades(mappedUnidades);
+        return;
+      }
+      
+      // Otherwise, fetch from API
+      try {
+        console.log('[CreateUser] Fetching unidades from API...');
+        const response = await httpClient.get('/mobile/unidades');
+        console.log('[CreateUser] Unidades API response:', response.data);
+        
+        if (response.data?.success && response.data?.data && response.data.data.length > 0) {
+          console.log('[CreateUser] Setting unidades from API:', response.data.data);
+          setUnidades(response.data.data);
+        } else if (response.data?.data && response.data.data.length > 0) {
+          // Fallback: if success flag is missing but data exists
+          console.log('[CreateUser] Setting unidades from API (fallback):', response.data.data);
+          setUnidades(response.data.data);
+        } else {
+          console.warn('[CreateUser] No unidades found in API response');
+        }
+      } catch (error: any) {
+        console.error('[CreateUser] Error fetching unidades:', error);
+        const errorMsg = error.response?.data?.message || error.message || 'Error desconocido';
+        console.error('[CreateUser] Error details:', errorMsg);
+      }
+    };
+    
+    fetchUnidades();
+  }, [unidadesFromRedux]);
 
   const showToast = (message: string, color: 'warning' | 'danger' | 'success' = "success") => {
     toast({
@@ -270,16 +311,23 @@ const CreateUser: React.FC = () => {
 
                 <IonSelect
                   className="createuser-select"
-                  placeholder="Nº de Unidad"
+                  placeholder={unidades && unidades.length > 0 ? "Nº de Unidad" : "Cargando unidades..."}
                   interface="popover"
                   toggleIcon={chevronDown}
+                  disabled={!unidades || unidades.length === 0}
                   {...form.register("nroUnidad")}
                 >
-                  {(unidades || []).map(({ value, label }) => (
-                    <IonSelectOption key={`${label}_${value}`} value={value}>
-                      {label}
+                  {(unidades && unidades.length > 0) ? (
+                    unidades.map(({ value, label }) => (
+                      <IonSelectOption key={`${label}_${value}`} value={value}>
+                        {label}
+                      </IonSelectOption>
+                    ))
+                  ) : (
+                    <IonSelectOption value="" disabled>
+                      No hay unidades disponibles
                     </IonSelectOption>
-                  ))}
+                  )}
                 </IonSelect>
               </div>
 

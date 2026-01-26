@@ -13,13 +13,14 @@ import {
   useIonRouter,
   useIonToast 
 } from "@ionic/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { formatearRut, handleRutDown, validarDigV } from "../../utils/RutFormatter";
 import { useForm } from "react-hook-form";
 import moment from "moment";
 import { arrowBack, calendarOutline, logoWhatsapp, mailOutline, downloadOutline, chevronDown } from "ionicons/icons";
 import { useAppSelector } from "../../hooks/loginHooks";
 import httpClient from "../../hooks/CapacitorClient";
+import { validateEmail, validateNombre, validateTelefono, validateRutFormat } from "../../utils/Validators";
 import qrCodeImage from '../../assets/images/QR_code.png';
 import '../../assets/Visita.css';
 
@@ -32,11 +33,12 @@ interface Campos {
 
 const Visita: React.FC = () => {
   const router = useIonRouter();
-  const { user, unidades } = useAppSelector((state) => state.login);
+  const { user, unidades: unidadesFromRedux } = useAppSelector((state) => state.login);
   const [loading, setLoading] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [generatedQR, setGeneratedQR] = useState<string>('');
   const [invitationData, setInvitationData] = useState<{nombre: string, fechaFin: string} | null>(null);
+  const [unidades, setUnidades] = useState<Array<{value: number | string, label: string}>>([]);
   const form = useForm();
   const modalInicio = useRef<HTMLIonModalElement>(null);
   const modalFin = useRef<HTMLIonModalElement>(null);
@@ -46,6 +48,46 @@ const Visita: React.FC = () => {
   const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(initDate.add(2, "days").format("yyyy-MM-DDTHH:mm:ss"));
   const [fechaMin] = useState(moment().format("yyyy-MM-DDTHH:mm:ss"));
   const [fechaMax] = useState(moment().add(2, 'weeks').format("yyyy-MM-DDTHH:mm:ss"));
+
+  // Fetch unidades on component mount
+  useEffect(() => {
+    const fetchUnidades = async () => {
+      // First, try to use unidades from Redux if available
+      if (unidadesFromRedux && unidadesFromRedux.length > 0) {
+        const mappedUnidades = unidadesFromRedux.map((u: any) => ({ 
+          value: typeof u.value === 'string' ? parseInt(u.value) || u.value : u.value, 
+          label: u.label 
+        }));
+        console.log('[Visita] Using unidades from Redux:', mappedUnidades);
+        setUnidades(mappedUnidades);
+        return;
+      }
+      
+      // Otherwise, fetch from API
+      try {
+        console.log('[Visita] Fetching unidades from API...');
+        const response = await httpClient.get('/mobile/unidades');
+        console.log('[Visita] Unidades API response:', response.data);
+        
+        if (response.data?.success && response.data?.data && response.data.data.length > 0) {
+          console.log('[Visita] Setting unidades from API:', response.data.data);
+          setUnidades(response.data.data);
+        } else if (response.data?.data && response.data.data.length > 0) {
+          // Fallback: if success flag is missing but data exists
+          console.log('[Visita] Setting unidades from API (fallback):', response.data.data);
+          setUnidades(response.data.data);
+        } else {
+          console.warn('[Visita] No unidades found in API response');
+        }
+      } catch (error: any) {
+        console.error('[Visita] Error fetching unidades:', error);
+        const errorMsg = error.response?.data?.message || error.message || 'Error desconocido';
+        console.error('[Visita] Error details:', errorMsg);
+      }
+    };
+    
+    fetchUnidades();
+  }, [unidadesFromRedux]);
 
   const showToast = (message: string, color: 'warning' | 'danger' | 'success' = "success") => {
     toast({
@@ -67,70 +109,137 @@ const Visita: React.FC = () => {
   };
 
   const handleContinue = async () => {
-    const { rut, telefono } = form.getValues();
+    const formValues = form.getValues();
+    const { rut, name, email, telefono, nroUnidad, rol, motivo } = formValues;
+
+    // Validate all required fields are present
+    if (!rut || rut.trim() === '') {
+      return showToast("El RUT es requerido.", "warning");
+    }
     
-    // Validate only if rut exists
-    if (rut) {
-      const tmp = rut.split("-");
-      let err = 0;
-      tmp[0] = tmp[0].replace(/\./g, '');
-      tmp[1] = tmp[1] === 'K' ? 'k' : tmp[1];
-      const digitoEsperado = validarDigV(tmp[0]);
-      const nameIn: Campos = {
-        rut: "Rut",
-        name: "Nombre Completo",
-        email: "Correo Electrónico",
-        telefono: "Teléfono"
-      };
+    if (!name || name.trim() === '') {
+      return showToast("El nombre completo es requerido.", "warning");
+    }
+    
+    if (!email || email.trim() === '') {
+      return showToast("El correo electrónico es requerido.", "warning");
+    }
+    
+    if (!telefono || telefono.trim() === '') {
+      return showToast("El teléfono es requerido.", "warning");
+    }
+    
+    if (!nroUnidad) {
+      return showToast("La unidad es requerida.", "warning");
+    }
+    
+    if (!rol) {
+      return showToast("El rol es requerido.", "warning");
+    }
+    
+    if (!fechaInicio || fechaInicio === "") {
+      return showToast("La fecha de inicio es requerida.", "warning");
+    }
 
-      Object.keys(nameIn).every((key: string) => {
-        if (form.getValues(key) === "" || form.getValues(key) === undefined) {
-          const valorCampo: string = nameIn[key as keyof typeof nameIn];
-          err++;
-          showToast(`Campo debe estar completo: ${valorCampo}.`, "warning");
-          return false;
-        }
-        return true;
-      });
+    if (!fechaFin || fechaFin === "") {
+      return showToast("La fecha de término es requerida.", "warning");
+    }
 
-      if (err !== 0) return false;
+    // Validate RUT format
+    const rutValidation = validateRutFormat(rut);
+    if (!rutValidation.valid) {
+      return showToast(rutValidation.message || "RUT inválido.", "warning");
+    }
 
-      if (String(digitoEsperado) !== tmp[1]) {
-        return showToast("Rut inválido.", "warning");
-      }
+    // Validate RUT checksum
+    const tmp = rut.split("-");
+    tmp[0] = tmp[0].replace(/\./g, '');
+    tmp[1] = tmp[1] === 'K' ? 'k' : tmp[1];
+    const digitoEsperado = validarDigV(Number(tmp[0]));
+    if (String(digitoEsperado) !== tmp[1]) {
+      return showToast("RUT inválido. El dígito verificador no coincide.", "warning");
+    }
 
-      if (telefono && telefono.length !== 9) {
-        return showToast("Número de teléfono inválido.", "warning");
-      }
+    // Validate email format
+    if (!validateEmail(email)) {
+      return showToast("Formato de correo electrónico inválido.", "warning");
+    }
 
-      if (!fechaInicio || fechaInicio === "") {
-        return showToast("Fecha de inicio inválida.", "warning");
-      }
+    // Validate name format
+    const nombreValidation = validateNombre(name);
+    if (!nombreValidation.valid) {
+      return showToast(nombreValidation.message || "Nombre inválido.", "warning");
+    }
 
-      if (!fechaFin || fechaFin === "") {
-        return showToast("Fecha de término inválida.", "warning");
-      }
+    // Validate phone format
+    const telefonoValidation = validateTelefono(telefono);
+    if (!telefonoValidation.valid) {
+      return showToast(telefonoValidation.message || "Teléfono inválido.", "warning");
+    }
 
-      try {
-        setLoading(true);
-        const fi = moment(fechaInicio).format("yyyy-MM-DD HH:mm:ss");
-        const ff = moment(fechaFin).format("yyyy-MM-DD HH:mm:ss");
-        const formValues = form.getValues();
-        const normalizedUser = user?.replace(/\./g, '') || '';
+    // Validate dates
+    const fi = moment(fechaInicio);
+    const ff = moment(fechaFin);
+    
+    if (ff.isBefore(fi)) {
+      return showToast("La fecha de término debe ser posterior a la fecha de inicio.", "warning");
+    }
+    
+    if (fi.isBefore(moment(), 'day')) {
+      return showToast("La fecha de inicio no puede ser anterior a hoy.", "warning");
+    }
+
+    // Check if RUT exists and validate user data consistency
+    try {
+      const normalizedRut = rut.replace(/\./g, '').trim();
+      const userResponse = await httpClient.post('/mobile/get-user-by-rut', { rut: normalizedRut });
+      
+      if (userResponse.data?.success && userResponse.data?.exists) {
+        const existingUser = userResponse.data.user;
         
-        // Use new invitations API
-        const response = await httpClient.post('/invitations', {
-          createdBy: normalizedUser,
-          nombreInvitado: formValues.name,
-          rutInvitado: formValues.rut?.replace(/\./g, ''),
-          correoInvitado: formValues.email,
-          telefonoInvitado: formValues.telefono,
-          motivo: formValues.motivo,
-          fechaInicio: fi,
-          fechaFin: ff,
-          idSala: formValues.nroUnidad,
-          usageLimit: 1
-        });
+        // Check if name, email, or phone don't match
+        const nameMismatch = existingUser.nombre && existingUser.nombre.trim().toLowerCase() !== name.trim().toLowerCase();
+        const emailMismatch = existingUser.correo && existingUser.correo.trim().toLowerCase() !== email.trim().toLowerCase();
+        const phoneMismatch = existingUser.telefono && existingUser.telefono.trim() !== telefono.trim();
+        
+        if (nameMismatch || emailMismatch || phoneMismatch) {
+          let mismatchFields = [];
+          if (nameMismatch) mismatchFields.push('nombre');
+          if (emailMismatch) mismatchFields.push('correo');
+          if (phoneMismatch) mismatchFields.push('teléfono');
+          
+          return showToast(
+            `El RUT ya está registrado, pero los datos no coinciden: ${mismatchFields.join(', ')}. Por favor, verifique la información.`,
+            "warning"
+          );
+        }
+      }
+    } catch (error) {
+      console.error('[Visita] Error checking user:', error);
+      // Continue anyway - backend will also validate
+    }
+
+    // All validations passed, proceed with invitation creation
+    try {
+      setLoading(true);
+      const fi = moment(fechaInicio).format("yyyy-MM-DD HH:mm:ss");
+      const ff = moment(fechaFin).format("yyyy-MM-DD HH:mm:ss");
+      const normalizedUser = user?.replace(/\./g, '') || '';
+      const normalizedRut = rut.replace(/\./g, '').trim();
+      
+      // Use new invitations API
+      const response = await httpClient.post('/invitations', {
+        createdBy: normalizedUser,
+        nombreInvitado: name.trim(),
+        rutInvitado: normalizedRut,
+        correoInvitado: email.trim(),
+        telefonoInvitado: telefono.trim(),
+        motivo: motivo || '',
+        fechaInicio: fi,
+        fechaFin: ff,
+        idSala: nroUnidad,
+        usageLimit: 1
+      });
         
         console.log('[Visita] Response:', response);
         
@@ -139,21 +248,19 @@ const Visita: React.FC = () => {
         if (response.data?.success && response.data?.data?.qrCode) {
           setGeneratedQR(response.data.data.qrCode);
           setInvitationData({
-            nombre: formValues.name,
+            nombre: name.trim(),
             fechaFin: ff
           });
         }
 
-        showToast("Invitación generada correctamente.", "success");
-        setCurrentStep(2);
-      } catch (error) {
-        console.error('[Visita] Error:', error);
-        showToast("Ocurrió algún error al crear la invitación.", "danger");
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      showToast("Por favor complete todos los campos.", "warning");
+      showToast("Invitación generada correctamente.", "success");
+      setCurrentStep(2);
+    } catch (error: any) {
+      console.error('[Visita] Error:', error);
+      const errorMessage = error.response?.data?.message || "Ocurrió algún error al crear la invitación.";
+      showToast(errorMessage, "danger");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -374,16 +481,23 @@ const Visita: React.FC = () => {
 
                   <IonSelect
                     className="visita-select"
-                    placeholder="Nº de Unidad"
+                    placeholder={unidades && unidades.length > 0 ? "Nº de Unidad" : "Cargando unidades..."}
                     interface="popover"
                     toggleIcon={chevronDown}
+                    disabled={!unidades || unidades.length === 0}
                     {...form.register("nroUnidad")}
                   >
-                    {(unidades || []).map(({ value, label }) => (
-                      <IonSelectOption key={`${label}_${value}`} value={value}>
-                        {label}
+                    {(unidades && unidades.length > 0) ? (
+                      unidades.map(({ value, label }) => (
+                        <IonSelectOption key={`${label}_${value}`} value={value}>
+                          {label}
+                        </IonSelectOption>
+                      ))
+                    ) : (
+                      <IonSelectOption value="" disabled>
+                        No hay unidades disponibles
                       </IonSelectOption>
-                    ))}
+                    )}
                   </IonSelect>
                 </div>
 
