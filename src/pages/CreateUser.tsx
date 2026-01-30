@@ -123,9 +123,10 @@ const CreateUser: React.FC = () => {
     if (!rol) {
       return showToast("El rol es requerido.", "warning");
     }
-    
-    if (!nroUnidad) {
-      return showToast("La unidad es requerida.", "warning");
+
+    // Nº de Unidad is required only for Residente (Tenant)
+    if (rol === 'RES' && (!nroUnidad || nroUnidad === '')) {
+      return showToast("La unidad es requerida para el rol Residente.", "warning");
     }
 
     // Validate RUT format
@@ -187,7 +188,7 @@ const CreateUser: React.FC = () => {
         correo: email.trim(),
         telefono: telefono.trim(),
         rol,
-        sala: nroUnidad,
+        sala: rol === 'RES' ? nroUnidad : (nroUnidad || null),
         fechaInicio: fi, 
         fechaFin: ff 
       });
@@ -295,25 +296,34 @@ const CreateUser: React.FC = () => {
                   {...form.register("rol")}
                 >
                   <IonSelectOption value="ADM">Administrador</IonSelectOption>
-                  <IonSelectOption value="OFC">Oficial</IonSelectOption>
-                  <IonSelectOption value="ENC">Encargado</IonSelectOption>
+                  <IonSelectOption value="SUP">Supervisor</IonSelectOption>
                   <IonSelectOption value="RES">Residente</IonSelectOption>
+                  <IonSelectOption value="PPL">Personal</IonSelectOption>
                 </IonSelect>
 
                 <IonSelect
                   className="createuser-select"
-                  placeholder={unidades && unidades.length > 0 ? "Nº de Unidad" : "Cargando unidades..."}
+                  placeholder={
+                    unidades && unidades.length > 0
+                      ? (form.watch?.('rol') === 'RES' ? "Nº de Unidad (requerido)" : "Nº de Unidad (opcional)")
+                      : "Cargando unidades..."
+                  }
                   interface="popover"
                   toggleIcon={chevronDown}
                   disabled={!unidades || unidades.length === 0}
                   {...form.register("nroUnidad")}
                 >
-                  {(unidades && unidades.length > 0) ? (
-                    unidades.map(({ value, label }) => (
-                      <IonSelectOption key={`${label}_${value}`} value={value}>
-                        {label}
-                      </IonSelectOption>
-                    ))
+                  {unidades && unidades.length > 0 ? (
+                    <>
+                      {form.watch?.('rol') !== 'RES' && (
+                        <IonSelectOption value="">Ninguna</IonSelectOption>
+                      )}
+                      {unidades.map(({ value, label }) => (
+                        <IonSelectOption key={`${label}_${value}`} value={value}>
+                          {label}
+                        </IonSelectOption>
+                      ))}
+                    </>
                   ) : (
                     <IonSelectOption value="" disabled>
                       No hay unidades disponibles

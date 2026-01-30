@@ -37,7 +37,13 @@ const Login: React.FC = () => {
     if (!rutValidation.valid) {
       return showToast(rutValidation.message || "RUT inválido.", "warning");
     }
-    
+
+    // Validate full name
+    const fullName = (formData.fullName || '').trim();
+    if (!fullName) {
+      return showToast("El nombre completo es requerido.", "warning");
+    }
+
     try {
       setLoading(true);
       const response = await httpClient.post('/mobile/auth/login', formData);
@@ -109,9 +115,9 @@ const Login: React.FC = () => {
             
             <IonInput
               className="input-field"
-              placeholder="contraseña"
-              type="password"
-              {...loginForm.register("password")}
+              placeholder="Nombre Completo"
+              type="text"
+              {...loginForm.register("fullName")}
               autocomplete="off"
             />
 

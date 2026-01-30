@@ -3,10 +3,10 @@ import { useAppSelector } from './hooks/loginHooks';
 
 // Map role IDs to role codes (consistent with backend mapping)
 const ROLE_ID_TO_CODE: Record<string, string> = {
-  '1': 'ADM',  // Administrador (also used for SAD)
-  '2': 'SUP',  // Supervisor (also used for OFC, ENC)
-  '3': 'USR',  // Usuario (also used for PRO, RES)
-  '4': 'VIS',  // Visitante
+  '1': 'ADM',  // Administrador (Building Admin / System Operator)
+  '2': 'SUP',  // Supervisor (Mid-level admin)
+  '3': 'RES',  // Residente (Tenant / Inquilino)
+  '4': 'PPL',  // Personal (Staff / Individual User)
 };
 
 // Map role codes to role IDs (reverse mapping)
@@ -14,12 +14,10 @@ const ROLE_CODE_TO_ID: Record<string, number> = {
   'SAD': 1,  // Super Admin -> Administrador
   'ADM': 1,  // Administrador
   'SUP': 2,  // Supervisor
-  'OFC': 2,  // Oficial -> Supervisor
-  'ENC': 2,  // Encargado -> Supervisor
-  'USR': 3,  // Usuario
-  'PRO': 3,  // Proveedor -> Usuario
-  'RES': 3,  // Residente -> Usuario
-  'VIS': 4,  // Visitante
+  'RES': 3,  // Residente (Tenant)
+  'PPL': 4,  // Personal (Staff)
+  // Legacy codes still map for existing data
+  'OFC': 2,  'ENC': 2,  'USR': 3,  'PRO': 3,  'VIS': 4,
 };
 
 interface ProtectedRoleRouteProps extends RouteProps {

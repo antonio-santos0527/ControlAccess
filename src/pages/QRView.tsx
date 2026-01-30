@@ -9,9 +9,10 @@ import '../../assets/QRView.css';
 
 const QRView: React.FC = () => {
   const router = useIonRouter();
-  const { user, username } = useAppSelector((state) => state.login);
+  const { user, username, userrol } = useAppSelector((state) => state.login);
   const [time, setTime] = useState(moment().format("DD/MM/YYYY, HH:mm"));
   const [timeEnd, setTimeEnd] = useState(moment().add(5, 'minutes').format("DD/MM/YYYY, HH:mm"));
+  const [validityMinutes, setValidityMinutes] = useState<number>(5);
   const [image, setImage] = useState<string>(qrCodeImage);
   const [loading, setLoading] = useState<boolean>(false);
   const [toast] = useIonToast();
@@ -66,57 +67,46 @@ const QRView: React.FC = () => {
   };
 
   const getQRImage = async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const currentTime = moment().format("DD/MM/YYYY, HH:mm");
-      const endTime = moment().add(5, 'minutes').format("DD/MM/YYYY, HH:mm");
-      setTime(currentTime);
-      setTimeEnd(endTime);
-      
-      console.log('[QRView] Fetching QR for user:', user);
-      
-      const response = await httpClient.post('/mobile/obtainQR', { 
-        user, 
-        fechaInicio: moment().format("YYYY-MM-DD HH:mm:ss"), 
-        fechaFin: moment().add(5, 'minutes').format("YYYY-MM-DD HH:mm:ss") 
-      });
-      
-      console.log('[QRView] Response status:', response.status);
-      
-      if (response.status === 403) {
-        console.log('[QRView] 403 Forbidden');
-        return false;
+      console.log('[QRView] Fetching personal access QR for user:', user);
+
+      const response = await httpClient.post('/mobile/obtainQR', { user });
+
+      if (response.status === 403 || response.status === 400) {
+        console.log('[QRView] Request failed:', response.status);
+        return;
       }
-      
-      if (response.data?.qrCode) {
-        console.log('[QRView] QR code received successfully');
-        setImage(response.data.qrCode);
-      } else {
-        console.log('[QRView] No qrCode in response:', response.data);
+
+      const data = response.data;
+      if (data?.qrCode) {
+        setImage(data.qrCode);
+        const start = moment();
+        setTime(start.format("DD/MM/YYYY, HH:mm"));
+        if (data.validityEnd) {
+          const end = moment(data.validityEnd);
+          setTimeEnd(end.format("DD/MM/YYYY, HH:mm"));
+        } else {
+          setTimeEnd(start.clone().add(data.validityMinutes ?? 5, 'minutes').format("DD/MM/YYYY, HH:mm"));
+        }
+        if (data.validityMinutes != null) setValidityMinutes(data.validityMinutes);
       }
     } catch (error) {
       console.error('[QRView] Error fetching QR:', error);
-      // Keep using default QR image if API fails
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    // Fetch QR immediately on mount
-    console.log('[QRView] Component mounted, fetching QR...');
-    getQRImage();
-    
-    // Set up auto-refresh every 5 minutes
-    const intervalId = setInterval(() => {
-      console.log('[QRView] Auto-refreshing QR...');
-      getQRImage();
-    }, 5 * 60 * 1000);
+  // Regenerate QR each time screen is opened; short refresh so token doesn't expire while viewing
+  const isAdmin = userrol === 1 || userrol === '1' || userrol === 'ADM' || userrol === 'SAD';
+  const refreshIntervalMs = isAdmin ? 60 * 1000 : 3 * 60 * 1000; // Admin: 1 min, others: 3 min
 
-    return () => {
-      console.log('[QRView] Cleaning up interval');
-      clearInterval(intervalId);
-    };
+  useEffect(() => {
+    getQRImage();
+    const intervalId = setInterval(getQRImage, refreshIntervalMs);
+    return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -138,7 +128,8 @@ const QRView: React.FC = () => {
           <div className="qrview-content-area">
             {/* Title */}
             <h1 className="qrview-title">QR</h1>
-            <p className="qrview-subtitle">Ingresa con este QR</p>
+            <p className="qrview-subtitle">Credencial de acceso personal</p>
+            <p className="qrview-subtitle-hint">Renovado al abrir esta pantalla · No es una invitación</p>
 
             {/* QR Section */}
             <div className="qrview-section">
@@ -148,12 +139,12 @@ const QRView: React.FC = () => {
               </div>
 
               {/* User Name */}
-              <h2 className="qrview-user-name">{username || 'Sebastián Briones'}</h2>
+              <h2 className="qrview-user-name">{username || 'Usuario'}</h2>
 
               {/* Date Info */}
               <div className="qrview-date-info">
                 <p className="qrview-date-text">Válido desde: {time} hs.</p>
-                <p className="qrview-date-text">Hasta: {timeEnd} hs.</p>
+                <p className="qrview-date-text">Hasta: {timeEnd} hs. ({validityMinutes} min)</p>
               </div>
 
               {/* Download QR Link */}

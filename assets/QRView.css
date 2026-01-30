@@ -65,6 +65,14 @@ ion-content.qrview-content::part(background) {
   font-size: 14px;
   font-weight: 400;
   color: #6b6b6b;
+  margin: 0 0 4px 0;
+}
+
+.qrview-subtitle-hint {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #9a9a9a;
   margin: 0 0 24px 0;
 }
 

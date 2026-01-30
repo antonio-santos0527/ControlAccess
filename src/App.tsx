@@ -49,12 +49,12 @@ const App: React.FC = () => {
     <IonApp>
       <IonReactRouter>
         <IonRouterOutlet>
-          <ProtectedRoleRoute exact path='/home' component={Home} roles={["SAD", "ADM", "SUP", "USR", "VIS", "PRO", "OFC", "ENC", "RES"]} />
-          <ProtectedRoleRoute exact path="/qr" component={QRView} roles={["SAD", "ADM", "SUP", "USR", "VIS", "PRO", "OFC", "ENC", "RES"]} />
+          <ProtectedRoleRoute exact path='/home' component={Home} roles={["SAD", "ADM", "SUP", "RES", "PPL"]} />
+          <ProtectedRoleRoute exact path="/qr" component={QRView} roles={["SAD", "ADM", "SUP", "RES", "PPL"]} />
           <Route exact path="/modpass" component={NewPassword} />
-          <ProtectedRoleRoute exact path="/createuser" component={CreateUser} roles={["SAD", "ADM", "SUP", "PRO", "ENC"]} />
-          <ProtectedRoleRoute exact path="/visit" component={Visita} roles={["SAD", "ADM", "SUP", "USR", "PRO", "ENC", "RES"]} />
-          <ProtectedRoleRoute exact path="/invitations" component={InvitationList} roles={["SAD", "ADM", "SUP", "USR", "PRO", "ENC", "RES"]} />
+          <ProtectedRoleRoute exact path="/createuser" component={CreateUser} roles={["SAD", "ADM"]} />
+          <ProtectedRoleRoute exact path="/visit" component={Visita} roles={["SAD", "ADM", "SUP", "RES"]} />
+          <ProtectedRoleRoute exact path="/invitations" component={InvitationList} roles={["SAD", "ADM", "SUP", "RES"]} />
           <Route exact path="/login" component={Login} />
           <Redirect exact from="/" to="/login" />
         </IonRouterOutlet>

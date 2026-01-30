@@ -13,10 +13,10 @@ const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { username, userrol } = useAppSelector((state) => state.login);
   
-  // Define which roles can access each feature
-  const canCreateUser = hasRole(userrol, ["SAD", "ADM", "SUP", "PRO", "ENC"]);
-  const canInvite = hasRole(userrol, ["SAD", "ADM", "SUP", "USR", "PRO", "ENC", "RES"]);
-  const canViewInvitations = hasRole(userrol, ["SAD", "ADM", "SUP", "USR", "PRO", "ENC", "RES"]);
+  // Permissions by role: Administrador (all), Supervisor (invite + approve), Residente (invite), Personal (QR only)
+  const canCreateUser = hasRole(userrol, ["SAD", "ADM"]);
+  const canInvite = hasRole(userrol, ["SAD", "ADM", "SUP", "RES"]);
+  const canViewInvitations = hasRole(userrol, ["SAD", "ADM", "SUP", "RES"]);
 
   const handleLogoutClick = () => {
     dispatch(handleLogout());
