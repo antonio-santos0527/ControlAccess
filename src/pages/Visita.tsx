@@ -43,9 +43,8 @@ const Visita: React.FC = () => {
   const modalInicio = useRef<HTMLIonModalElement>(null);
   const modalFin = useRef<HTMLIonModalElement>(null);
   const [toast] = useIonToast();
-  const initDate = moment();
-  const [fechaInicio, setFechaInicio] = useState<string | string[] | null | undefined>(initDate.format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(initDate.add(2, "days").format("yyyy-MM-DDTHH:mm:ss"));
+  const [fechaInicio, setFechaInicio] = useState<string | string[] | null | undefined>(moment().format("yyyy-MM-DDTHH:mm:ss"));
+  const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(moment().add(2, "days").format("yyyy-MM-DDTHH:mm:ss"));
   const [fechaMin] = useState(moment().format("yyyy-MM-DDTHH:mm:ss"));
   const [fechaMax] = useState(moment().add(2, 'weeks').format("yyyy-MM-DDTHH:mm:ss"));
 
@@ -133,8 +132,8 @@ const Visita: React.FC = () => {
       return showToast("La unidad es requerida.", "warning");
     }
     
-    if (!rol) {
-      return showToast("El rol es requerido.", "warning");
+    if (!rol || (rol !== 'Visitante' && rol !== 'Delivery')) {
+      return showToast("Seleccione el rol (Visitante o Delivery).", "warning");
     }
     
     if (!fechaInicio || fechaInicio === "") {
@@ -145,7 +144,7 @@ const Visita: React.FC = () => {
       return showToast("La fecha de término es requerida.", "warning");
     }
 
-    // Validate RUT format
+    // RUT: format and non-empty only (invited visitor does not use the app; no DB lookup)
     const rutValidation = validateRut(rut);
     if (!rutValidation.valid) {
       return showToast(rutValidation.message || "RUT inválido.", "warning");
@@ -176,39 +175,12 @@ const Visita: React.FC = () => {
       return showToast("La fecha de término debe ser posterior a la fecha de inicio.", "warning");
     }
     
-    if (fi.isBefore(moment(), 'day')) {
-      return showToast("La fecha de inicio no puede ser anterior a hoy.", "warning");
+    if (fi.isBefore(moment(), 'minute')) {
+      return showToast("La fecha y hora de inicio no puede ser anterior al momento actual.", "warning");
     }
 
-    // Check if RUT exists and validate user data consistency
-    try {
-      const normalizedRut = rut.replace(/\./g, '').trim();
-      const userResponse = await httpClient.post('/mobile/get-user-by-rut', { rut: normalizedRut });
-      
-      if (userResponse.data?.success && userResponse.data?.exists) {
-        const existingUser = userResponse.data.user;
-        
-        // Check if name, email, or phone don't match
-        const nameMismatch = existingUser.nombre && existingUser.nombre.trim().toLowerCase() !== name.trim().toLowerCase();
-        const emailMismatch = existingUser.correo && existingUser.correo.trim().toLowerCase() !== email.trim().toLowerCase();
-        const phoneMismatch = existingUser.telefono && existingUser.telefono.trim() !== telefono.trim();
-        
-        if (nameMismatch || emailMismatch || phoneMismatch) {
-          let mismatchFields = [];
-          if (nameMismatch) mismatchFields.push('nombre');
-          if (emailMismatch) mismatchFields.push('correo');
-          if (phoneMismatch) mismatchFields.push('teléfono');
-          
-          return showToast(
-            `El RUT ya está registrado, pero los datos no coinciden: ${mismatchFields.join(', ')}. Por favor, verifique la información.`,
-            "warning"
-          );
-        }
-      }
-    } catch (error) {
-      console.error('[Visita] Error checking user:', error);
-      // Continue anyway - backend will also validate
-    }
+    // Invited person is a visitor/delivery — they do not log in and may not exist in the database.
+    // Only RUT format is validated; no check against PRY_Usuarios.
 
     // All validations passed, proceed with invitation creation
     try {
@@ -225,11 +197,12 @@ const Visita: React.FC = () => {
         rutInvitado: normalizedRut,
         correoInvitado: email.trim(),
         telefonoInvitado: telefono.trim(),
+        tipoInvitacion: rol || 'Visitante',
         motivo: motivo || '',
         fechaInicio: fi,
         fechaFin: ff,
         idSala: nroUnidad,
-        usageLimit: 1
+        usageLimit: rol === 'Delivery' ? 1 : 1
       });
         
         console.log('[Visita] Response:', response);
@@ -551,7 +524,7 @@ const Visita: React.FC = () => {
                   autocomplete="off"
                 />
 
-                {/* Rol and Nº de Unidad - Row */}
+                {/* Rol (Visitante / Delivery) */}
                 <div className="form-row">
                   <IonSelect
                     className="visita-select"
@@ -560,9 +533,8 @@ const Visita: React.FC = () => {
                     toggleIcon={chevronDown}
                     {...form.register("rol")}
                   >
-                    <IonSelectOption value="VIS">Visita</IonSelectOption>
-                    <IonSelectOption value="PRO">Proveedor</IonSelectOption>
-                    <IonSelectOption value="TRA">Trabajador</IonSelectOption>
+                    <IonSelectOption value="Visitante">Visitante</IonSelectOption>
+                    <IonSelectOption value="Delivery">Delivery</IonSelectOption>
                   </IonSelect>
 
                   <IonSelect
@@ -587,13 +559,13 @@ const Visita: React.FC = () => {
                   </IonSelect>
                 </div>
 
-                {/* Inicio and Fin - Row */}
+                {/* Inicio (fecha y hora) and Fin (fecha y hora) - Row */}
                 <div className="form-row">
                   <div className="date-input-wrapper">
                     <IonInput
                       className="visita-input"
-                      placeholder="Inicio"
-                      value={fechaInicio ? moment(fechaInicio).format("DD/MM/YYYY") : ''}
+                      placeholder="Inicio (fecha y hora)"
+                      value={fechaInicio ? moment(fechaInicio).format("DD/MM/YYYY HH:mm") : ''}
                       readonly
                       onClick={() => modalInicio.current?.present()}
                     />
@@ -603,8 +575,8 @@ const Visita: React.FC = () => {
                   <div className="date-input-wrapper">
                     <IonInput
                       className="visita-input"
-                      placeholder="Fin"
-                      value={fechaFin ? moment(fechaFin).format("DD/MM/YYYY") : ''}
+                      placeholder="Fin (fecha y hora)"
+                      value={fechaFin ? moment(fechaFin).format("DD/MM/YYYY HH:mm") : ''}
                       readonly
                       onClick={() => modalFin.current?.present()}
                     />
@@ -612,12 +584,12 @@ const Visita: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Date Modals */}
+                {/* Date+Time Modals */}
                 <IonModal ref={modalInicio} className="date-modal">
                   <IonDatetime
                     style={{ margin: "0 auto" }}
                     showDefaultButtons={true}
-                    presentation="date"
+                    presentation="date-time"
                     onIonChange={(e) => setFechaInicio(e.detail.value)}
                     min={fechaMin}
                     max={fechaMax}
@@ -629,7 +601,7 @@ const Visita: React.FC = () => {
                   <IonDatetime
                     style={{ margin: "0 auto" }}
                     showDefaultButtons={true}
-                    presentation="date"
+                    presentation="date-time"
                     onIonChange={(e) => setFechaFin(e.detail.value)}
                     min={fechaMin}
                     max={fechaMax}
@@ -656,10 +628,13 @@ const Visita: React.FC = () => {
               </div>
             )}
 
-            {/* Step 2: QR Code Sharing */}
+            {/* Step 2: Comparte el QR — invitation QR for the visitor/delivery person */}
             {currentStep === 2 && (
               <div className="qr-share-section">
-                {/* QR Code */}
+                <p className="qr-share-subtitle">
+                  QR de invitación para el visitante. Válido para la unidad y el horario seleccionados.
+                </p>
+                {/* QR Code (invitation token; belongs to invited person) */}
                 <div className="qr-code-container" ref={qrCodeRef}>
                   {accessCode ? (
                     <QRCodeSVG 

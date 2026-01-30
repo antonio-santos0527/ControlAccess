@@ -269,6 +269,16 @@ ion-modal.date-modal ion-datetime {
   padding-top: 20px;
 }
 
+.qr-share-subtitle {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b6b6b;
+  text-align: center;
+  margin: 0 0 20px 0;
+  max-width: 320px;
+}
+
 /* QR Code Container */
 .qr-code-container {
   display: flex;
