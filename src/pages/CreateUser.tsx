@@ -296,9 +296,7 @@ const CreateUser: React.FC = () => {
                   {...form.register("rol")}
                 >
                   <IonSelectOption value="ADM">Administrador</IonSelectOption>
-                  <IonSelectOption value="SUP">Supervisor</IonSelectOption>
                   <IonSelectOption value="RES">Residente</IonSelectOption>
-                  <IonSelectOption value="PPL">Personal</IonSelectOption>
                 </IonSelect>
 
                 <IonSelect

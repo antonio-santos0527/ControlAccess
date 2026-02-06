@@ -13,10 +13,10 @@ const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { username, userrol } = useAppSelector((state) => state.login);
   
-  // Permissions by role: Administrador (all), Supervisor (invite + approve), Residente (invite), Personal (QR only)
+  // Permissions by role: Administrador (all), Residente (invite + QR)
   const canCreateUser = hasRole(userrol, ["SAD", "ADM"]);
-  const canInvite = hasRole(userrol, ["SAD", "ADM", "SUP", "RES"]);
-  const canViewInvitations = hasRole(userrol, ["SAD", "ADM", "SUP", "RES"]);
+  const canInvite = hasRole(userrol, ["SAD", "ADM", "RES"]);
+  const canViewInvitations = hasRole(userrol, ["SAD", "ADM", "RES"]);
 
   const handleLogoutClick = () => {
     dispatch(handleLogout());

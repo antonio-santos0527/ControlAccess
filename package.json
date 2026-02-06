@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "test.e2e": "cypress run",
     "test.unit": "vitest",
+    "test.unit:run": "vitest run",
     "lint": "eslint",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",

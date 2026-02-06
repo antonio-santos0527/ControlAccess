@@ -1,23 +1,17 @@
 import { Redirect, Route, RouteProps } from 'react-router';
 import { useAppSelector } from './hooks/loginHooks';
 
-// Map role IDs to role codes (consistent with backend mapping)
+// Map role IDs to role codes (Administrador and Residente only)
 const ROLE_ID_TO_CODE: Record<string, string> = {
-  '1': 'ADM',  // Administrador (Building Admin / System Operator)
-  '2': 'SUP',  // Supervisor (Mid-level admin)
-  '3': 'RES',  // Residente (Tenant / Inquilino)
-  '4': 'PPL',  // Personal (Staff / Individual User)
+  '1': 'ADM',  // Administrador
+  '2': 'RES',  // Residente (Tenant / Inquilino)
 };
 
 // Map role codes to role IDs (reverse mapping)
 const ROLE_CODE_TO_ID: Record<string, number> = {
   'SAD': 1,  // Super Admin -> Administrador
   'ADM': 1,  // Administrador
-  'SUP': 2,  // Supervisor
-  'RES': 3,  // Residente (Tenant)
-  'PPL': 4,  // Personal (Staff)
-  // Legacy codes still map for existing data
-  'OFC': 2,  'ENC': 2,  'USR': 3,  'PRO': 3,  'VIS': 4,
+  'RES': 2,  // Residente (Tenant)
 };
 
 interface ProtectedRoleRouteProps extends RouteProps {

@@ -1,6 +1,7 @@
-describe('My First Test', () => {
-  it('Visits the app root url', () => {
+describe('ControlAccess App', () => {
+  it('shows Login page when visiting root', () => {
     cy.visit('/')
-    cy.contains('#container', 'Ready to create an app?')
+    cy.contains('Hola!')
+    cy.contains('Ingresar')
   })
 })
