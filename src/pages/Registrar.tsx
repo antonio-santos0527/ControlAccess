@@ -27,8 +27,8 @@ const Registrar: React.FC = () => {
   const router = useIonRouter();
   const { rolesRegistro, unidades } = useAppSelector((state) => state.login);
   const [loading, setLoading] = useState<boolean>(false);
-  const [fechaInicio, setFechaInicio] = useState<string>(moment().format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaFin, setFechaFin] = useState<string>(moment().add(6, "M").format("yyyy-MM-DDTHH:mm:ss"));
+  const [fechaInicio, setFechaInicio] = useState<string>(moment().format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaFin, setFechaFin] = useState<string>(moment().add(6, "M").format("YYYY-MM-DDTHH:mm:ss"));
   const form = useForm();
   const [toast] = useIonToast();
 
@@ -81,8 +81,8 @@ const Registrar: React.FC = () => {
       showToast("Registro realizado correctamente.", "success");
 
       form.reset();
-      setFechaInicio(moment().format("yyyy-MM-DDTHH:mm:ss"));
-      setFechaFin(moment().add(6, "M").format("yyyy-MM-DDTHH:mm:ss"));
+      setFechaInicio(moment().format("YYYY-MM-DDTHH:mm:ss"));
+      setFechaFin(moment().add(6, "M").format("YYYY-MM-DDTHH:mm:ss"));
     } catch {
       showToast("Ocurrio algún error al realizar el registro.", "danger");
     } finally {

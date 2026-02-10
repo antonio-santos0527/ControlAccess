@@ -57,20 +57,14 @@ const Login: React.FC = () => {
         return showToast(response.data?.message || "Acceso denegado", "danger");
       }
 
-      const { username, userrol, passTemp, roles, unidades } = response.data;
-      console.log('[Login] Parsed data - username:', username, 'userrol:', userrol, 'passTemp:', passTemp);
+      const { username, userrol, roles, unidades } = response.data;
+      console.log('[Login] Parsed data - username:', username, 'userrol:', userrol);
 
-      if (passTemp === 1) {
-        dispatch(handleLoginSuccess(formData.username, username, userrol, roles, unidades))
-        showToast("Inicio Sesión exitoso, debe modificar su contraseña.")
-        return router.push('/modpass', 'root', 'replace')
-      }
-
-      showToast("Inicio Sesión exitoso")
-      dispatch(handleLoginSuccess(formData.username, username, userrol, roles, unidades))
+      showToast("Inicio Sesión exitoso");
+      dispatch(handleLoginSuccess(formData.username, username, userrol, roles, unidades));
       setTimeout(() => {
-        router.push('/home', 'root', 'replace')
-      }, 500)
+        router.push('/home', 'root', 'replace');
+      }, 500);
     } catch (error) {
       console.error('[Login] Error:', error);
       showToast("Error al iniciar sesión.", "danger");
@@ -78,10 +72,6 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   }
-
-  const handleForgotPassword = () => {
-    router.push('/modpass', 'forward', 'push');
-  };
 
   return (
     <IonPage>
@@ -130,15 +120,6 @@ const Login: React.FC = () => {
             </IonButton>
           </div>
 
-          {/* Forgot Password */}
-          <div className="forgot-password-section">
-            <button 
-              className="forgot-password-link"
-              onClick={handleForgotPassword}
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          </div>
         </div>
       </IonContent>
     </IonPage>

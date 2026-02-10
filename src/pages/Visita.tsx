@@ -43,10 +43,10 @@ const Visita: React.FC = () => {
   const modalInicio = useRef<HTMLIonModalElement>(null);
   const modalFin = useRef<HTMLIonModalElement>(null);
   const [toast] = useIonToast();
-  const [fechaInicio, setFechaInicio] = useState<string | string[] | null | undefined>(moment().format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(moment().add(2, "days").format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaMin] = useState(moment().format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaMax] = useState(moment().add(2, 'weeks').format("yyyy-MM-DDTHH:mm:ss"));
+  const [fechaInicio, setFechaInicio] = useState<string | string[] | null | undefined>(moment().format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(moment().add(2, "days").format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaMin] = useState(moment().format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaMax] = useState(moment().add(2, 'weeks').format("YYYY-MM-DDTHH:mm:ss"));
 
   // Fetch unidades on component mount
   useEffect(() => {
@@ -185,8 +185,8 @@ const Visita: React.FC = () => {
     // All validations passed, proceed with invitation creation
     try {
       setLoading(true);
-      const fi = moment(fechaInicio).format("yyyy-MM-DD HH:mm:ss");
-      const ff = moment(fechaFin).format("yyyy-MM-DD HH:mm:ss");
+      const fi = moment(fechaInicio).format("YYYY-MM-DD HH:mm:ss");
+      const ff = moment(fechaFin).format("YYYY-MM-DD HH:mm:ss");
       const normalizedUser = user?.replace(/\./g, '') || '';
       const normalizedRut = rut.replace(/\./g, '').trim();
       

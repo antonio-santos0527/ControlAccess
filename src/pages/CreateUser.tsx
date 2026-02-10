@@ -39,10 +39,10 @@ const CreateUser: React.FC = () => {
   const modalFin = useRef<HTMLIonModalElement>(null);
   const [toast] = useIonToast();
   const initDate = moment();
-  const [fechaInicio, setFechaInicio] = useState<string | string[] | null | undefined>(initDate.format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(initDate.add(30, "days").format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaMin] = useState(moment().format("yyyy-MM-DDTHH:mm:ss"));
-  const [fechaMax] = useState(moment().add(1, 'year').format("yyyy-MM-DDTHH:mm:ss"));
+  const [fechaInicio, setFechaInicio] = useState<string | string[] | null | undefined>(initDate.format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(initDate.add(30, "days").format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaMin] = useState(moment().format("YYYY-MM-DDTHH:mm:ss"));
+  const [fechaMax] = useState(moment().add(1, 'year').format("YYYY-MM-DDTHH:mm:ss"));
 
   // Fetch unidades on component mount
   useEffect(() => {
@@ -178,8 +178,8 @@ const CreateUser: React.FC = () => {
 
     // Submit form
     try {
-      const fi = moment(fechaInicio).format("yyyy-MM-DD HH:mm:ss");
-      const ff = moment(fechaFin).format("yyyy-MM-DD HH:mm:ss");
+      const fi = moment(fechaInicio).format("YYYY-MM-DD HH:mm:ss");
+      const ff = moment(fechaFin).format("YYYY-MM-DD HH:mm:ss");
       const normalizedRut = rut.replace(/\./g, '').trim();
       
       const response = await httpClient.post('/mobile/createUser', { 
