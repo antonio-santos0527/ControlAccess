@@ -71,10 +71,13 @@ const InvitationList: React.FC = () => {
       
       console.log('[InvitationList] Response:', response);
       
-      if (response.data?.success) {
-        setInvitations(response.data.data || []);
-      } else {
+      const data = response.data?.data;
+      if (Array.isArray(data)) {
+        setInvitations(data);
+      } else if (!response.data?.success) {
         showToast('Error al cargar invitaciones', 'danger');
+      } else {
+        setInvitations([]);
       }
     } catch (error) {
       console.error('[InvitationList] Error:', error);
@@ -236,7 +239,7 @@ const InvitationList: React.FC = () => {
                     <div className="invitation-detail">
                       <span className="label">Válido:</span>
                       <span className="value">
-                        {formatDate(invitation.fechaInicio)} - {formatDate(invitation.fechaFin)}
+                        {formatDate(invitation.fechaInicio) || '—'} – {formatDate(invitation.fechaFin) || '—'}
                       </span>
                     </div>
                     {invitation.sala && (
@@ -253,7 +256,9 @@ const InvitationList: React.FC = () => {
                     )}
                     <div className="invitation-detail">
                       <span className="label">Usos:</span>
-                      <span className="value">{invitation.usedCount} / {invitation.usageLimit}</span>
+                      <span className="value">
+                        {invitation.usedCount ?? '—'} / {invitation.usageLimit ?? '—'}
+                      </span>
                     </div>
                   </div>
 
