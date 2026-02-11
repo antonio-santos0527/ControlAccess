@@ -559,12 +559,15 @@ const Visita: React.FC = () => {
                   </IonSelect>
                 </div>
 
-                {/* Inicio (fecha y hora) and Fin (fecha y hora) - Row */}
+                {/* Horario válido: time range (date + time), not just days */}
+                <p className="visita-hint" style={{ marginBottom: '6px', fontSize: '12px', color: 'var(--ion-color-medium)' }}>
+                  El acceso es válido solo en el horario indicado (fecha y hora).
+                </p>
                 <div className="form-row">
                   <div className="date-input-wrapper">
                     <IonInput
                       className="visita-input"
-                      placeholder="Inicio (fecha y hora)"
+                      placeholder="Desde (fecha y hora)"
                       value={fechaInicio ? moment(fechaInicio).format("DD/MM/YYYY HH:mm") : ''}
                       readonly
                       onClick={() => modalInicio.current?.present()}
@@ -575,7 +578,7 @@ const Visita: React.FC = () => {
                   <div className="date-input-wrapper">
                     <IonInput
                       className="visita-input"
-                      placeholder="Fin (fecha y hora)"
+                      placeholder="Hasta (fecha y hora)"
                       value={fechaFin ? moment(fechaFin).format("DD/MM/YYYY HH:mm") : ''}
                       readonly
                       onClick={() => modalFin.current?.present()}

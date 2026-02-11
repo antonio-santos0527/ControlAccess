@@ -237,7 +237,7 @@ const InvitationList: React.FC = () => {
                       </div>
                     )}
                     <div className="invitation-detail">
-                      <span className="label">Válido:</span>
+                      <span className="label">Horario válido:</span>
                       <span className="value">
                         {formatDate(invitation.fechaInicio) || '—'} – {formatDate(invitation.fechaFin) || '—'}
                       </span>

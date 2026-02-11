@@ -330,13 +330,16 @@ const CreateUser: React.FC = () => {
                 </IonSelect>
               </div>
 
-              {/* Inicio and Fin - Row */}
+              {/* Time range: permissions valid only in this window (date + time) */}
+              <p className="createuser-hint" style={{ marginBottom: '6px', fontSize: '12px', color: 'var(--ion-color-medium)' }}>
+                El acceso es válido solo en el horario indicado (fecha y hora).
+              </p>
               <div className="createuser-form-row">
                 <div className="createuser-date-wrapper">
                   <IonInput
                     className="createuser-input"
-                    placeholder="Inicio"
-                    value={fechaInicio ? moment(fechaInicio).format("DD/MM/YYYY") : ''}
+                    placeholder="Desde (fecha y hora)"
+                    value={fechaInicio ? moment(fechaInicio).format("DD/MM/YYYY HH:mm") : ''}
                     readonly
                     onClick={() => modalInicio.current?.present()}
                   />
@@ -346,8 +349,8 @@ const CreateUser: React.FC = () => {
                 <div className="createuser-date-wrapper">
                   <IonInput
                     className="createuser-input"
-                    placeholder="Fin"
-                    value={fechaFin ? moment(fechaFin).format("DD/MM/YYYY") : ''}
+                    placeholder="Hasta (fecha y hora)"
+                    value={fechaFin ? moment(fechaFin).format("DD/MM/YYYY HH:mm") : ''}
                     readonly
                     onClick={() => modalFin.current?.present()}
                   />
@@ -355,12 +358,12 @@ const CreateUser: React.FC = () => {
                 </div>
               </div>
 
-              {/* Date Modals */}
+              {/* Date-time Modals (time range, not just days) */}
               <IonModal ref={modalInicio} className="createuser-date-modal">
                 <IonDatetime
                   style={{ margin: "0 auto" }}
                   showDefaultButtons={true}
-                  presentation="date"
+                  presentation="date-time"
                   onIonChange={(e) => setFechaInicio(e.detail.value)}
                   min={fechaMin}
                   max={fechaMax}
@@ -372,7 +375,7 @@ const CreateUser: React.FC = () => {
                 <IonDatetime
                   style={{ margin: "0 auto" }}
                   showDefaultButtons={true}
-                  presentation="date"
+                  presentation="date-time"
                   onIonChange={(e) => setFechaFin(e.detail.value)}
                   min={fechaMin}
                   max={fechaMax}
