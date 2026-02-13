@@ -114,3 +114,31 @@ export const validateRut = (rut: string): { valid: boolean; message?: string } =
   // Simply use format validation - no checksum required
   return validateRutFormat(rut);
 };
+
+/**
+ * Validates password strength for new user creation
+ * - Minimum 8 characters, maximum 128
+ * - At least one uppercase, one lowercase, one digit
+ */
+export const validatePassword = (password: string): { valid: boolean; message?: string } => {
+  if (!password || password.trim() === '') {
+    return { valid: false, message: 'La contraseña es requerida.' };
+  }
+  const p = password;
+  if (p.length < 8) {
+    return { valid: false, message: 'La contraseña debe tener al menos 8 caracteres.' };
+  }
+  if (p.length > 128) {
+    return { valid: false, message: 'La contraseña no puede exceder 128 caracteres.' };
+  }
+  if (!/[A-Z]/.test(p)) {
+    return { valid: false, message: 'La contraseña debe incluir al menos una mayúscula.' };
+  }
+  if (!/[a-z]/.test(p)) {
+    return { valid: false, message: 'La contraseña debe incluir al menos una minúscula.' };
+  }
+  if (!/\d/.test(p)) {
+    return { valid: false, message: 'La contraseña debe incluir al menos un número.' };
+  }
+  return { valid: true };
+};

@@ -9,16 +9,18 @@ import {
   useIonToast,
   IonModal,
   IonButton,
+  IonAlert,
   RefresherEventDetail
 } from '@ionic/react';
 import { useEffect, useState, useRef } from 'react';
-import { arrowBack, closeCircle, checkmarkCircle, timeOutline, banOutline, qrCodeOutline } from 'ionicons/icons';
+import { arrowBack, closeCircle, checkmarkCircle, timeOutline, banOutline, qrCodeOutline, trashOutline } from 'ionicons/icons';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAppSelector } from '../../hooks/loginHooks';
 import httpClient from '../../hooks/CapacitorClient';
 import '../../assets/InvitationList.css';
 
 interface Invitation {
-  id: number;
+  id: string | number;
   idAcceso: string;
   nombreInvitado: string;
   rutInvitado: string;
@@ -27,14 +29,14 @@ interface Invitation {
   motivo: string;
   fechaInicio: string;
   fechaFin: string;
-  idSala: number;
-  sala: string;
+  idSala: number | null;
+  sala: string | null;
   status: string;
   usageLimit: number;
   usedCount: number;
-  qrCode: string;
-  fechaCreacion: string;
-  cancelledAt: string | null;
+  qrCode: string | null;
+  fechaCreacion: string | null;
+  cancelledAt: boolean | null;
 }
 
 const InvitationList: React.FC = () => {
@@ -44,6 +46,7 @@ const InvitationList: React.FC = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [selectedInvitation, setSelectedInvitation] = useState<Invitation | null>(null);
   const [showQRModal, setShowQRModal] = useState<boolean>(false);
+  const [deleteConfirmInvitation, setDeleteConfirmInvitation] = useState<Invitation | null>(null);
   const [toast] = useIonToast();
 
   const showToast = (message: string, color: 'warning' | 'danger' | 'success' = "success") => {
@@ -115,8 +118,41 @@ const InvitationList: React.FC = () => {
     }
   };
 
-  const handleShowQR = (invitation: Invitation) => {
-    setSelectedInvitation(invitation);
+  const handleRemoveClick = (invitation: Invitation) => {
+    setDeleteConfirmInvitation(invitation);
+  };
+
+  const handleRemoveConfirm = async () => {
+    const invitation = deleteConfirmInvitation;
+    setDeleteConfirmInvitation(null);
+    if (!invitation) return;
+    try {
+      setLoading(true);
+      const response = await httpClient.delete(`/invitations/${invitation.id}`);
+
+      if (response.data?.success) {
+        showToast('Invitación eliminada', 'success');
+        fetchInvitations();
+      } else {
+        showToast(response.data?.message || 'Error al eliminar', 'danger');
+      }
+    } catch (error) {
+      console.error('[InvitationList] Remove error:', error);
+      showToast('Error al eliminar invitación', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleShowQR = async (invitation: Invitation) => {
+    let inv = invitation;
+    if (!invitation.qrCode && invitation.id != null) {
+      try {
+        const res = await httpClient.get(`/invitations/${String(invitation.id)}`);
+        if (res.data?.success && res.data?.data) inv = res.data.data as Invitation;
+      } catch (_) { /* use list item as-is */ }
+    }
+    setSelectedInvitation(inv);
     setShowQRModal(true);
   };
 
@@ -191,6 +227,17 @@ const InvitationList: React.FC = () => {
     <IonPage>
       <IonContent fullscreen className="invitation-list-content">
         <IonLoading spinner="circles" isOpen={loading} onDidDismiss={() => setLoading(false)} />
+
+        <IonAlert
+          isOpen={!!deleteConfirmInvitation}
+          onDidDismiss={() => setDeleteConfirmInvitation(null)}
+          header="Eliminar invitación"
+          message={deleteConfirmInvitation ? `¿Eliminar la invitación de ${deleteConfirmInvitation.nombreInvitado || 'este invitado'}? Esta acción no se puede deshacer.` : ''}
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            { text: 'Eliminar', role: 'destructive', handler: handleRemoveConfirm }
+          ]}
+        />
         
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
@@ -263,25 +310,7 @@ const InvitationList: React.FC = () => {
                   </div>
 
                   <div className="invitation-card-actions">
-                    {invitation.status === 'ACTIVE' && (
-                      <>
-                        <button 
-                          className="invitation-action-btn qr-btn"
-                          onClick={() => handleShowQR(invitation)}
-                        >
-                          <IonIcon icon={qrCodeOutline} />
-                          Ver QR
-                        </button>
-                        <button 
-                          className="invitation-action-btn cancel-btn"
-                          onClick={() => handleCancelInvitation(invitation)}
-                        >
-                          <IonIcon icon={closeCircle} />
-                          Cancelar
-                        </button>
-                      </>
-                    )}
-                    {invitation.status === 'PENDING' && (
+                    {(invitation.status === 'ACTIVE' || invitation.status === 'PENDING') && (
                       <>
                         <button 
                           className="invitation-action-btn qr-btn"
@@ -308,6 +337,14 @@ const InvitationList: React.FC = () => {
                         QR No Disponible
                       </button>
                     )}
+                    <button 
+                      className="invitation-action-btn remove-btn"
+                      onClick={() => handleRemoveClick(invitation)}
+                      title="Eliminar de la lista"
+                    >
+                      <IonIcon icon={trashOutline} />
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               ))
@@ -327,10 +364,16 @@ const InvitationList: React.FC = () => {
             {selectedInvitation && (
               <div className="qr-modal-body">
                 <div className="qr-image-container">
-                  <img 
-                    src={selectedInvitation.qrCode} 
-                    alt="QR Code" 
-                  />
+                  {selectedInvitation.qrCode ? (
+                    <img src={selectedInvitation.qrCode} alt="QR Code" />
+                  ) : (() => {
+                    const code = String(selectedInvitation.id ?? selectedInvitation.idAcceso ?? '');
+                    return code ? (
+                      <QRCodeSVG value={code} size={200} level="M" includeMargin />
+                    ) : (
+                      <p className="qr-unavailable">Código QR no disponible</p>
+                    );
+                  })()}
                 </div>
                 <p className="qr-name">{selectedInvitation.nombreInvitado}</p>
                 <p className="qr-validity">

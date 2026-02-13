@@ -38,10 +38,10 @@ const Login: React.FC = () => {
       return showToast(rutValidation.message || "RUT inválido.", "warning");
     }
 
-    // Validate full name
-    const fullName = (formData.fullName || '').trim();
-    if (!fullName) {
-      return showToast("El nombre completo es requerido.", "warning");
+    // Validate password
+    const password = (formData.password || '').trim();
+    if (!password) {
+      return showToast("La contraseña es requerida.", "warning");
     }
 
     try {
@@ -105,10 +105,10 @@ const Login: React.FC = () => {
             
             <IonInput
               className="input-field"
-              placeholder="Nombre Completo"
-              type="text"
-              {...loginForm.register("fullName")}
-              autocomplete="off"
+              placeholder="Contraseña"
+              type="password"
+              {...loginForm.register("password")}
+              autocomplete="current-password"
             />
 
             <IonButton 

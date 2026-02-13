@@ -143,6 +143,68 @@ ion-content.createuser-content::part(background) {
   flex: 1;
 }
 
+/* Password row: input takes space, button fixed */
+.createuser-password-row {
+  align-items: stretch;
+}
+.createuser-password-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  display: flex;
+  align-items: stretch;
+  overflow: visible;
+}
+.createuser-password-wrapper ion-input.createuser-password-input {
+  flex: 1;
+  min-width: 0;
+}
+.createuser-password-wrapper .createuser-password-input {
+  --padding-end: 44px;
+}
+.createuser-password-wrapper .createuser-password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+  --box-shadow: none;
+  --color: #2A6E90;
+  z-index: 10;
+  cursor: pointer;
+}
+.createuser-password-wrapper .createuser-password-toggle:hover {
+  --color: #1c5977;
+}
+.createuser-password-wrapper .createuser-password-toggle ion-icon {
+  font-size: 22px;
+}
+.createuser-password-input {
+  flex: 1;
+  min-width: 0;
+}
+.createuser-generate-password-btn {
+  flex: 0 0 auto;
+  --border-radius: 8px;
+  --border-width: 1px;
+  --border-color: #2A6E90;
+  --color: #2A6E90;
+  font-weight: 600;
+  margin: 0;
+  min-height: 50px;
+}
+.createuser-generate-password-btn ion-icon {
+  margin-right: 4px;
+}
+
 /* Date Input with Icon */
 .createuser-date-wrapper {
   position: relative;

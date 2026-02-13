@@ -192,6 +192,18 @@
   background: #ffebee;
 }
 
+.remove-btn {
+  background: #fff;
+  color: #666;
+  border: 1px solid #ccc;
+}
+
+.remove-btn:hover {
+  background: #f5f5f5;
+  color: #c62828;
+  border-color: #c62828;
+}
+
 /* QR Modal */
 .qr-modal-content {
   display: flex;

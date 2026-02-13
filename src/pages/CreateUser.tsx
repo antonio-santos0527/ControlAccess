@@ -14,10 +14,10 @@ import {
 } from "@ionic/react";
 import { useRef, useState, useEffect } from "react";
 import { formatearRut, handleRutDown } from "../../utils/RutFormatter";
-import { validateEmail, validateNombre, validateTelefono, validateRut } from "../../utils/Validators";
+import { validateEmail, validateNombre, validateTelefono, validateRut, validatePassword } from "../../utils/Validators";
 import { useForm } from "react-hook-form";
 import moment from "moment";
-import { arrowBack, calendarOutline, chevronDown } from "ionicons/icons";
+import { arrowBack, calendarOutline, chevronDown, refreshOutline, eyeOutline, eyeOffOutline } from "ionicons/icons";
 import { useAppSelector } from "../../hooks/loginHooks";
 import httpClient from "../../hooks/CapacitorClient";
 import '../../assets/CreateUser.css';
@@ -43,6 +43,7 @@ const CreateUser: React.FC = () => {
   const [fechaFin, setFechaFin] = useState<string | string[] | null | undefined>(initDate.add(30, "days").format("YYYY-MM-DDTHH:mm:ss"));
   const [fechaMin] = useState(moment().format("YYYY-MM-DDTHH:mm:ss"));
   const [fechaMax] = useState(moment().add(1, 'year').format("YYYY-MM-DDTHH:mm:ss"));
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch unidades on component mount
   useEffect(() => {
@@ -99,9 +100,27 @@ const CreateUser: React.FC = () => {
     router.push('/home', 'back', 'pop');
   };
 
+  const generateStrongPassword = () => {
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const lower = "abcdefghjkmnpqrstuvwxyz";
+    const digits = "23456789";
+    const symbols = "!@#$%&*";
+    const all = upper + lower + digits + symbols;
+    let pass = "";
+    pass += upper[Math.floor(Math.random() * upper.length)];
+    pass += lower[Math.floor(Math.random() * lower.length)];
+    pass += digits[Math.floor(Math.random() * digits.length)];
+    pass += symbols[Math.floor(Math.random() * symbols.length)];
+    for (let i = 0; i < 10; i++) {
+      pass += all[Math.floor(Math.random() * all.length)];
+    }
+    pass = pass.split("").sort(() => Math.random() - 0.5).join("");
+    form.setValue("password", pass);
+  };
+
   const handleConfirm = async () => {
     const formValues = form.getValues();
-    const { rut, name, email, telefono, rol, nroUnidad } = formValues;
+    const { rut, name, email, telefono, password, rol, nroUnidad } = formValues;
     
     // Validate all required fields are present
     if (!rut || rut.trim() === '') {
@@ -118,6 +137,11 @@ const CreateUser: React.FC = () => {
     
     if (!telefono || telefono.trim() === '') {
       return showToast("El teléfono es requerido.", "warning");
+    }
+
+    const passwordValidation = validatePassword(password || "");
+    if (!passwordValidation.valid) {
+      return showToast(passwordValidation.message || "Contraseña inválida.", "warning");
     }
     
     if (!rol) {
@@ -187,6 +211,7 @@ const CreateUser: React.FC = () => {
         nombre: name.trim(),
         correo: email.trim(),
         telefono: telefono.trim(),
+        password: (password || "").trim(),
         rol,
         sala: rol === 'RES' ? nroUnidad : (nroUnidad || null),
         fechaInicio: fi, 
@@ -286,6 +311,37 @@ const CreateUser: React.FC = () => {
                 autocomplete="off"
               />
 
+              {/* Contraseña + Generar */}
+              <div className="createuser-form-row createuser-password-row">
+                <div className="createuser-password-wrapper">
+                  <IonInput
+                    className="createuser-input createuser-password-input"
+                    placeholder="Contraseña"
+                    type={showPassword ? "text" : "password"}
+                    {...form.register("password")}
+                    autocomplete="new-password"
+                  />
+                  <IonButton
+                    type="button"
+                    fill="clear"
+                    className="createuser-password-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    <IonIcon icon={showPassword ? eyeOffOutline : eyeOutline} slot="icon-only" />
+                  </IonButton>
+                </div>
+                <IonButton
+                  type="button"
+                  fill="outline"
+                  className="createuser-generate-password-btn"
+                  onClick={generateStrongPassword}
+                >
+                  <IonIcon icon={refreshOutline} />
+                  Generar
+                </IonButton>
+              </div>
+
               {/* Rol and Nº de Unidad - Row */}
               <div className="createuser-form-row">
                 <IonSelect
@@ -295,8 +351,13 @@ const CreateUser: React.FC = () => {
                   toggleIcon={chevronDown}
                   {...form.register("rol")}
                 >
+                  <IonSelectOption value="SAD">Super Administrador</IonSelectOption>
                   <IonSelectOption value="ADM">Administrador</IonSelectOption>
+                  <IonSelectOption value="PRO">Propietario</IonSelectOption>
+                  <IonSelectOption value="ENC">Encargado</IonSelectOption>
+                  <IonSelectOption value="OFC">Oficinista</IonSelectOption>
                   <IonSelectOption value="RES">Residente</IonSelectOption>
+                  <IonSelectOption value="VIS">Visita</IonSelectOption>
                 </IonSelect>
 
                 <IonSelect
